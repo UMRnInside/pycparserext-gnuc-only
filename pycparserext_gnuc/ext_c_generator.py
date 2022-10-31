@@ -1,5 +1,5 @@
 from pycparser.c_generator import CGenerator as CGeneratorBaseBuggy
-from pycparserext.ext_c_parser import FuncDeclExt, TypeDeclExt
+from pycparserext_gnuc.ext_c_parser import FuncDeclExt, TypeDeclExt
 import pycparser.c_ast as c_ast
 
 
@@ -165,20 +165,5 @@ class GNUCGenerator(GnuCGenerator):
         from warnings import warn
         warn("GNUCGenerator is now called GnuCGenerator",
                 DeprecationWarning, stacklevel=2)
-
-
-class OpenCLCGenerator(AsmAndAttributesMixin, CGeneratorBase):
-    def visit_FileAST(self, n):
-        s = ''
-        from pycparserext.ext_c_parser import PreprocessorLine
-        for ext in n.ext:
-            if isinstance(ext, (c_ast.FuncDef, PreprocessorLine)):
-                s += self.visit(ext)
-            else:
-                s += self.visit(ext) + ';\n'
-        return s
-
-    def visit_PreprocessorLine(self, n):
-        return n.contents
 
 # vim: fdm=marker

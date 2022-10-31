@@ -12,8 +12,8 @@ from pycparser.plyparser import parameterized, template
 class CParserBase(pycparser.c_parser.CParser):
     def __init__(self, **kwds):
         kwds['lexer'] = self.lexer_class
-        kwds['lextab'] = 'pycparserext.lextab'
-        kwds['yacctab'] = 'pycparserext.yacctab'
+        kwds['lextab'] = 'pycparserext_gnuc.lextab'
+        kwds['yacctab'] = 'pycparserext_gnuc.yacctab'
         pycparser.c_parser.CParser.__init__(self, **kwds)
 
     def parse(self, text, filename='', debuglevel=0,
@@ -477,7 +477,7 @@ class _AsmAndAttributesMixin(_AsmMixin, _AttributesMixin):
 class GnuCParser(_AsmAndAttributesMixin, CParserBase):
     # TODO: __extension__
 
-    from pycparserext.ext_c_lexer import GnuCLexer as lexer_class  # noqa
+    from pycparserext_gnuc.ext_c_lexer import GnuCLexer as lexer_class  # noqa
 
     initial_type_symbols = set(["__builtin_va_list"])
 
@@ -579,82 +579,5 @@ class GnuCParser(_AsmAndAttributesMixin, CParserBase):
         p[0] = p[1]
 # }}}
 
-
-class OpenCLCParser(_AsmAndAttributesMixin, CParserBase):
-    from pycparserext.ext_c_lexer import OpenCLCLexer as lexer_class  # noqa
-
-    INT_BIT_COUNTS = [8, 16, 32, 64]
-    initial_type_symbols = (
-            set([
-                "%s%d" % (base_name, count)
-                for base_name in [
-                    'char', 'uchar', 'short', 'ushort', 'int', 'uint',
-                    'long', 'ulong', 'float', 'double', 'half']
-                for count in [2, 3, 4, 8, 16]
-                ])
-            | set([
-                "intptr_t", "uintptr_t",
-                "intmax_t", "uintmax_t",
-                "size_t", "ptrdiff_t",
-                "uint", "ulong", "ushort", "uchar",
-                "half", "bool"])
-            | set(["int%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set(["uint%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set(["int_least%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set(["uint_least%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set(["int_fast%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set(["uint_fast%d_t" % bc for bc in INT_BIT_COUNTS])
-            | set([
-                "image1d_t", "image1d_array_t", "image1d_buffer_t",
-                "image2d_t", "image2d_array_t",
-                "image3d_t",
-                "sampler_t", "event_t"
-                ])
-            | set(["cfloat_t", "cdouble_t"])  # PyOpenCL extension
-            )
-
-    def p_pp_directive(self, p):
-        """ pp_directive  : PPHASH
-        """
-        p[0] = [PreprocessorLine(p[1], coord=self._coord(p.lineno(1)))]
-
-    def p_external_declaration_comment(self, p):
-        """ external_declaration    : LINECOMMENT
-        """
-        p[0] = None
-
-    def p_statement_comment(self, p):
-        """ statement    : LINECOMMENT
-        """
-        p[0] = None
-
-    def p_type_qualifier_cl(self, p):
-        """ type_qualifier  : __GLOBAL
-                            | GLOBAL
-                            | __LOCAL
-                            | LOCAL
-                            | __CONSTANT
-                            | CONSTANT
-                            | __PRIVATE
-                            | PRIVATE
-                            | __READ_ONLY
-                            | READ_ONLY
-                            | __WRITE_ONLY
-                            | WRITE_ONLY
-                            | __READ_WRITE
-                            | READ_WRITE
-        """
-        p[0] = p[1]
-
-    def p_function_specifier_cl(self, p):
-        """ function_specifier  : __KERNEL
-                                | KERNEL
-        """
-        p[0] = p[1]
-
-    def p_unified_volatile_cl(self, p):
-        """ unified_volatile : VOLATILE
-        """
-        p[0] = p[1]
 
 # vim: fdm=marker

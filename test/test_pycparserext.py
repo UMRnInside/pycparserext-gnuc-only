@@ -221,26 +221,6 @@ def test_funky_header_code_5():
     print(GnuCGenerator().visit(ast))
 
 
-@pytest.mark.parametrize("typename", ["int", "uint"])
-def test_opencl(typename):
-    from pycparserext.ext_c_parser import OpenCLCParser
-    src = """
-            __kernel void zeroMatrix(__global float *A, int n,  __global float * B)
-            {
-                %s i = get_global_id(0);
-                for (int k=0; k<n; k++)
-                    A[i*n+k] = 0;
-            }
-            """ % typename
-
-    p = OpenCLCParser()
-    ast = p.parse(src)
-    ast.show()
-
-    from pycparserext.ext_c_generator import OpenCLCGenerator
-    print(OpenCLCGenerator().visit(ast))
-
-
 def test_array_attributes():
     src = """
         int x[10] __attribute__((unused));
